@@ -25,6 +25,7 @@
 #include "Weather/Rasp/Configured.hpp"
 #ifdef HAVE_HTTP
 #include "Weather/SkySight/SkySightClient.hpp"
+#include "OpenGlide/OpenGlide.hpp"
 #endif
 #include "Input/InputEvents.hpp"
 #include "Input/InputQueue.hpp"
@@ -255,6 +256,13 @@ AfterStartup()
     } catch (...) {
       LogError(std::current_exception());
     }
+  }
+
+  // OpenGlide: start the live routing client
+  try {
+    OpenGlide::Initialise();
+  } catch (...) {
+    LogError(std::current_exception(), "OpenGlide initialisation failed");
   }
 #endif
 }
@@ -1005,6 +1013,13 @@ Shutdown()
 
 #ifdef HAVE_HTTP
   BeginShutdownNetComponents();
+
+  // OpenGlide: stop the live routing client
+  try {
+    OpenGlide::Deinitialise();
+  } catch (...) {
+    LogError(std::current_exception(), "OpenGlide shutdown failed");
+  }
 #endif
 
   // Show progress dialog

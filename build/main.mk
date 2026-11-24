@@ -683,6 +683,14 @@ XCSOAR_SOURCES += \
 	$(SRC)/Weather/SkySight/SkySightRequest.cpp
 
 $(call SRC_TO_OBJ,$(SRC)/Weather/SkySight/SkySightFileDecoder.cpp): CPPFLAGS += $(NETCDF_CPPFLAGS)
+
+# OpenGlide live routing integration
+XCSOAR_SOURCES += \
+	$(SRC)/OpenGlide/OpenGlide.cpp \
+	$(SRC)/OpenGlide/LiveClient.cpp \
+	$(SRC)/OpenGlide/TaskBridge.cpp \
+	$(SRC)/OpenGlide/WeatherLayer.cpp \
+	$(SRC)/OpenGlide/PlanImport.cpp
 endif
 
 ifeq ($(TARGET_IS_DARWIN),y)
