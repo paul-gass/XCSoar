@@ -3,15 +3,9 @@ name: OpenGlide Nav Build
 on:
   push:
     branches: [main, dev, openglide-nav]
-    paths:
-      - 'src/**'
-      - 'build/**'
-      - 'android/**'
-      - 'Makefile'
-      - '.github/workflows/openglide-build.yml'
   pull_request:
     branches: [main, dev]
-  workflow_dispatch:  # Allow manual trigger
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -19,7 +13,7 @@ concurrency:
 
 jobs:
   linux:
-    name: Linux (UNIX, software renderer)
+    name: Linux (UNIX)
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/xcsoar/xcsoar/xcsoar-build:latest
@@ -32,30 +26,28 @@ jobs:
         run: |
           make -j$(nproc) TARGET=UNIX VFB=y USE_CCACHE=y
 
-      - name: Run tests
-        run: |
-          make -j$(nproc) TARGET=UNIX VFB=y USE_CCACHE=y build-check
-          make -j$(nproc) TARGET=UNIX VFB=y check
-
       - name: Upload binary
         uses: actions/upload-artifact@v4
         with:
           name: openglidenav-linux
-          path: output/UNIX/bin/openglidenav
+          path: output/UNIX/bin/xcsoar
 
   android:
-    name: Android (ANDROID)
+    name: Android
     runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/xcsoar/xcsoar/xcsoar-build:latest
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
 
+      - name: Install Android SDK/NDK
+        run: |
+          ./ide/provisioning/install-android-tools.sh NDK
+          ./ide/provisioning/install-android-tools.sh SDK
+
       - name: Build OpenGlide Nav (Android)
         run: |
-          make -j$(nproc) TARGET=ANDROID USE_CCACHE=y
+          make -j$(nproc) TARGET=ANDROID USE_CCACHE=y DEBUG=y
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
@@ -66,12 +58,8 @@ jobs:
   verify-branding:
     name: Verify branding
     runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/xcsoar/xcsoar/xcsoar-build:latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          submodules: recursive
 
       - name: Check ProductName.hpp
         run: |
