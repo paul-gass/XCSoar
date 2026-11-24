@@ -33,7 +33,7 @@ ImportLatestPlan(ProtectedTaskManager &task_manager,
     true,  // accept gzip
     response,
     nullptr,  // no cookie capture
-    nullptr   // no progress
+    nullptr   // progress callback
   );
   
   curl_slist_free_all(headers);

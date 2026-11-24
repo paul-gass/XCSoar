@@ -227,7 +227,7 @@ private:
       body,
       response,
       nullptr,  // no cookie capture
-      nullptr   // no cookie to send
+      nullptr   // cookie to send
     );
     
     curl_slist_free_all(headers);
