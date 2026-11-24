@@ -5,11 +5,13 @@
 
 #include <concepts>
 
-#if defined(__clang__) && __has_warning("-Wnan-infinity-disabled")
-/* Clang warns about __builtin_isfinite() under -ffast-math. The
-   warning group exists only on newer Clang; older NDKs (Clang 18)
-   reject the pragma under -Werror. Keep the check as a sanity test. */
-#pragma GCC diagnostic ignored "-Wnan-infinity-disabled"
+#ifdef __clang__
+/* GCC still tokenizes the skipped branch of a one-line #if, so
+   __has_warning() has to live in its own directive. The warning
+   group exists only on newer Clang. */
+#  if __has_warning("-Wnan-infinity-disabled")
+#    pragma GCC diagnostic ignored "-Wnan-infinity-disabled"
+#  endif
 #endif
 
 /**
