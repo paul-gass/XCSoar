@@ -2,7 +2,7 @@ name: OpenGlide Nav Build
 
 on:
   push:
-    branches: [main, dev]
+    branches: [main, dev, openglide-nav]
     paths:
       - 'src/**'
       - 'build/**'
@@ -11,6 +11,7 @@ on:
       - '.github/workflows/openglide-build.yml'
   pull_request:
     branches: [main, dev]
+  workflow_dispatch:  # Allow manual trigger
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
