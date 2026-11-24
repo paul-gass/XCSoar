@@ -43,7 +43,7 @@ jobs:
       - name: Install build dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y ccache librsvg2-bin gettext
+          sudo apt-get install -y ccache librsvg2-bin gettext quilt imagemagick
 
       - name: Install Android SDK/NDK
         run: |
