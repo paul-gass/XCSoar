@@ -4,24 +4,23 @@
 #include "WeatherLayer.hpp"
 
 #include "ui/canvas/Canvas.hpp"
+#include "ui/dim/BulkPoint.hpp"
 #include "Projection/WindowProjection.hpp"
 #include "Geo/GeoPoint.hpp"
-#include "Look/MapLook.hpp"
 
 #include <algorithm>
 #include <cmath>
 
 namespace OpenGlide {
 
-// Colours
-static constexpr auto kRainFill      = Color(100, 100, 255, 80);   // semi-transparent blue
-static constexpr auto kStormFill     = Color(255, 50, 50, 120);    // red
-static constexpr auto kStormBorder   = Color(200, 0, 0);
-static constexpr auto kCumulusFill   = Color(80, 200, 80, 40);     // subtle green
-static constexpr auto kThermalUp     = Color(255, 140, 0);         // orange
-static constexpr auto kSuggestionOk  = Color(50, 200, 50);         // green dashed
-static constexpr auto kSuggestionWarn = Color(255, 200, 0);        // yellow dashed
-static constexpr auto kStaleTint     = Color(180, 180, 180, 160);  // grey overlay
+// Colours (no alpha on all platforms)
+static constexpr Color kRainFill(100, 100, 255);
+static constexpr Color kStormFill(255, 50, 50);
+static constexpr Color kStormBorder(200, 0, 0);
+static constexpr Color kCumulusFill(80, 200, 80);
+static constexpr Color kThermalUp(255, 140, 0);
+static constexpr Color kSuggestionOk(50, 200, 50);
+static constexpr Color kSuggestionWarn(255, 200, 0);
 
 static PixelPoint
 GeoToScreen(const WindowProjection &proj, double lat, double lon)
@@ -36,10 +35,12 @@ DrawPolygonRing(Canvas &canvas, const WindowProjection &proj,
 {
   if (ring.size() < 3) return;
 
-  std::vector<PixelPoint> points;
+  std::vector<BulkPixelPoint> points;
   points.reserve(ring.size());
-  for (const auto &[lon, lat] : ring)
-    points.push_back(GeoToScreen(proj, lat, lon));
+  for (const auto &[lon, lat] : ring) {
+    auto pt = GeoToScreen(proj, lat, lon);
+    points.push_back(BulkPixelPoint{pt.x, pt.y});
+  }
 
   canvas.Select(Brush(fill));
   canvas.Select(Pen(1, border));
@@ -53,6 +54,7 @@ DrawWeatherOverlay(Canvas &canvas, const WindowProjection &projection,
   if (!response.valid) return;
 
   const bool stale = response.data_age_s > 15 * 60;
+  (void)stale;  // TODO: grey out stale data
 
   // 1. Weather polygons (rain, storms, cumulus fields).
   for (const auto &poly : response.weather_polygons) {
@@ -81,20 +83,13 @@ DrawWeatherOverlay(Canvas &canvas, const WindowProjection &projection,
     }
   }
 
-  // 2. OGN thermal markers (small arrow-up circles).
+  // 2. OGN thermal markers (small circles).
   for (const auto &th : response.thermals) {
     auto pt = GeoToScreen(projection, th.lat, th.lon);
     unsigned radius = std::clamp(static_cast<unsigned>(th.climb_ms * 4), 4u, 16u);
     canvas.Select(Brush(kThermalUp));
     canvas.Select(Pen(1, Color(200, 100, 0)));
     canvas.DrawCircle(pt, radius);
-  }
-
-  // 3. Stale-data tint.
-  if (stale) {
-    // A subtle grey wash over the whole overlay area to signal
-    // that the data is old. The map itself stays untouched.
-    // (In practice this is a label "Data ≥ 15 min old" in the corner.)
   }
 }
 
@@ -109,17 +104,16 @@ DrawSuggestionOverlay(Canvas &canvas, const WindowProjection &projection,
   auto target = GeoToScreen(projection,
                              suggestion.target_lat, suggestion.target_lon);
 
-  // Dashed line from the current position to the suggested target.
   // The colour depends on the severity: green for a gain, yellow for a warning.
   Color line_color = suggestion.gain_s > 0 ? kSuggestionOk : kSuggestionWarn;
   canvas.Select(Pen(3, line_color));
+  
   // A cross-hair at the target.
-  canvas.DrawLine(target.x - 12, target.y, target.x + 12, target.y);
-  canvas.DrawLine(target.x, target.y - 12, target.x, target.y + 12);
+  canvas.DrawLine(PixelPoint{target.x - 12, target.y}, 
+                  PixelPoint{target.x + 12, target.y});
+  canvas.DrawLine(PixelPoint{target.x, target.y - 12}, 
+                  PixelPoint{target.x, target.y + 12});
   canvas.DrawCircle(target, 14);
-
-  // Banner with the reason text (bottom of screen, handled by the
-  // InfoBox or a dedicated overlay widget — this is the map part).
 }
 
 } // namespace OpenGlide

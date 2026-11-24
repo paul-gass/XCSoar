@@ -5,6 +5,7 @@
 
 // XCSoar task engine
 #include "Task/ProtectedTaskManager.hpp"
+#include "Engine/Task/TaskManager.hpp"
 #include "Engine/Task/Ordered/OrderedTask.hpp"
 #include "Engine/Task/Ordered/Points/AATPoint.hpp"
 #include "Geo/GeoPoint.hpp"
