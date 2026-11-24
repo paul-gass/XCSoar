@@ -34,6 +34,10 @@
  * No audio — the pilot decides, the app does not speak.
  */
 
+// Forward declarations (global namespace)
+class Canvas;
+class WindowProjection;
+
 namespace OpenGlide {
 
 /**
@@ -79,8 +83,6 @@ void OnMapTick();
 /**
  * Called by MapWindow::DrawOverlay() — renders weather + suggestion.
  */
-class Canvas;
-class WindowProjection;
 void DrawOverlays(Canvas &canvas, const WindowProjection &projection);
 
 } // namespace OpenGlide
