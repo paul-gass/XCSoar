@@ -42,13 +42,11 @@ jobs:
 
       - name: Install build dependencies
         run: |
-          sudo ./ide/provisioning/install-debian-packages.sh BASE
-          sudo apt-get install -y vorbis-tools
+          sudo ./ide/provisioning/install-debian-packages.sh BASE ANDROID
 
       - name: Install Android SDK/NDK
         run: |
-          ./ide/provisioning/install-android-tools.sh NDK
-          ./ide/provisioning/install-android-tools.sh SDK
+          ./ide/provisioning/install-android-tools.sh NDK SDK BUNDLETOOL
 
       - name: Build OpenGlide Nav (Android)
         run: |
