@@ -70,4 +70,17 @@ void AcceptSuggestion();
  */
 void DismissSuggestion();
 
+/**
+ * Called by the map renderer on each redraw to update overlays and
+ * check for new suggestions.
+ */
+void OnMapTick();
+
+/**
+ * Called by MapWindow::DrawOverlay() — renders weather + suggestion.
+ */
+class Canvas;
+class WindowProjection;
+void DrawOverlays(Canvas &canvas, const WindowProjection &projection);
+
 } // namespace OpenGlide
