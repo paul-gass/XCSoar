@@ -40,6 +40,11 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ccache librsvg2-bin gettext
+
       - name: Install Android SDK/NDK
         run: |
           ./ide/provisioning/install-android-tools.sh NDK
