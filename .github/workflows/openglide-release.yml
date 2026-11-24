@@ -1,0 +1,113 @@
+name: OpenGlide Nav Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version tag (e.g. v0.1.0)'
+        required: true
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+env:
+  CCACHE_DIR: ${{ github.workspace }}/.ccache
+  USE_CCACHE: y
+
+jobs:
+  linux:
+    name: Linux (UNIX)
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/xcsoar/xcsoar/xcsoar-build:latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { submodules: recursive }
+      - uses: actions/cache@v4
+        with: { path: .ccache, key: ccache-linux-${{ github.sha }}, restore-keys: ccache-linux- }
+      - run: make -j$(nproc) TARGET=UNIX VFB=y USE_CCACHE=y
+      - run: make -j$(nproc) TARGET=UNIX VFB=y USE_CCACHE=y build-check && make check
+      - uses: actions/upload-artifact@v4
+        with: { name: openglidenav-linux, path: output/UNIX/bin/openglidenav }
+
+  android:
+    name: Android (fat APK)
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/xcsoar/xcsoar/xcsoar-build:latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { submodules: recursive }
+      - uses: actions/cache@v4
+        with: { path: .ccache, key: ccache-android-${{ github.sha }}, restore-keys: ccache-android- }
+      - run: make -j$(nproc) TARGET=ANDROIDFAT USE_CCACHE=y
+      - uses: actions/upload-artifact@v4
+        with:
+          name: openglidenav-android
+          path: |
+            output/ANDROID/bin/*.apk
+            output/ANDROID/bin/*.aab
+
+  kobo:
+    name: Kobo (e-reader)
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/xcsoar/xcsoar/xcsoar-build:latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { submodules: recursive }
+      - uses: actions/cache@v4
+        with: { path: .ccache, key: ccache-kobo-${{ github.sha }}, restore-keys: ccache-kobo- }
+      - name: Install Kobo tools
+        run: |
+          cd ide/provisioning
+          ./install-debian-packages.sh UPDATE ARM KOBO || true
+      - run: make -j$(nproc) TARGET=KOBO USE_CCACHE=y
+      - run: make -j$(nproc) TARGET=KOBO USE_CCACHE=y output/KOBO/KoboRoot.tgz
+      - uses: actions/upload-artifact@v4
+        with:
+          name: openglidenav-kobo
+          path: |
+            output/KOBO/bin/openglidenav
+            output/KOBO/KoboRoot.tgz
+
+  windows:
+    name: Windows (x64 OpenGL)
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/xcsoar/xcsoar/xcsoar-build:latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { submodules: recursive }
+      - uses: actions/cache@v4
+        with: { path: .ccache, key: ccache-win-${{ github.sha }}, restore-keys: ccache-win- }
+      - run: make -j$(nproc) TARGET=WIN64OPENGL USE_CCACHE=y everything
+      - uses: actions/upload-artifact@v4
+        with:
+          name: openglidenav-windows
+          path: |
+            output/WIN64OPENGL/bin/OpenGlide Nav.exe
+            output/WIN64OPENGL/bin/*.zip
+
+  release:
+    name: Create Release
+    needs: [linux, android, kobo, windows]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with: { path: artifacts }
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: |
+            artifacts/openglidenav-android/*.apk
+            artifacts/openglidenav-kobo/KoboRoot.tgz
+            artifacts/openglidenav-windows/*.zip
+            artifacts/openglidenav-linux/openglidenav

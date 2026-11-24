@@ -1,0 +1,79 @@
+name: OpenGlide Nav Build
+
+on:
+  push:
+    branches: [main, dev]
+    paths:
+      - 'src/**'
+      - 'build/**'
+      - 'android/**'
+      - 'Makefile'
+      - '.github/workflows/openglide-build.yml'
+  pull_request:
+    branches: [main, dev]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  linux:
+    name: Linux (UNIX, software renderer)
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/xcsoar/xcsoar/xcsoar-build:latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Build OpenGlide Nav (Linux)
+        run: |
+          make -j$(nproc) TARGET=UNIX VFB=y USE_CCACHE=y
+
+      - name: Run tests
+        run: |
+          make -j$(nproc) TARGET=UNIX VFB=y USE_CCACHE=y build-check
+          make -j$(nproc) TARGET=UNIX VFB=y check
+
+      - name: Upload binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: openglidenav-linux
+          path: output/UNIX/bin/openglidenav
+
+  android:
+    name: Android (ANDROIDFAT)
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/xcsoar/xcsoar/xcsoar-build:latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Build OpenGlide Nav (Android)
+        run: |
+          make -j$(nproc) TARGET=ANDROIDFAT USE_CCACHE=y
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: openglidenav-android
+          path: output/ANDROID/bin/*.apk
+
+  verify-branding:
+    name: Verify branding
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/xcsoar/xcsoar/xcsoar-build:latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Check ProductName.hpp
+        run: |
+          grep -q 'PRODUCT_NAME "OpenGlide Nav"' src/ProductName.hpp
+          grep -q 'ANDROID_PACKAGE "org.openglide.nav"' src/ProductName.hpp
+          echo "✓ Branding verified"
