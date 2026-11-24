@@ -42,6 +42,7 @@ jobs:
 
       - name: Install build dependencies
         run: |
+          sudo apt-get update
           sudo ./ide/provisioning/install-debian-packages.sh BASE ANDROID
 
       - name: Install Android SDK/NDK
