@@ -52,7 +52,11 @@ jobs:
 
       - name: Build OpenGlide Nav (Android)
         run: |
-          make -j$(nproc) TARGET=ANDROID USE_CCACHE=y DEBUG=y
+          # GitHub runners export ANDROID_NDK to their preinstalled NDK 27.
+          # This tree is built against NDK r26d from the provisioning script.
+          make -j$(nproc) TARGET=ANDROID USE_CCACHE=y DEBUG=y \
+            ANDROID_NDK="${HOME}/opt/android-ndk-r26d" \
+            ANDROID_SDK="${HOME}/opt/android-sdk-linux"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4

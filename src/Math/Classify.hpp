@@ -5,11 +5,10 @@
 
 #include <concepts>
 
-#if defined(__clang__) && __clang_major__ >= 18
-/* suppress clang 18 warning due to -ffast-math; we want to leave the
-   __builtin_isfinite() check, because it might be helpful with some
-   compilers or compiler versions, and it's only used as sanity
-   check */
+#if defined(__clang__) && __has_warning("-Wnan-infinity-disabled")
+/* Clang warns about __builtin_isfinite() under -ffast-math. The
+   warning group exists only on newer Clang; older NDKs (Clang 18)
+   reject the pragma under -Werror. Keep the check as a sanity test. */
 #pragma GCC diagnostic ignored "-Wnan-infinity-disabled"
 #endif
 
