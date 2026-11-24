@@ -26,27 +26,22 @@ ApplySuggestion(ProtectedTaskManager &task_manager,
       Angle::Degrees(suggestion.target_lat),
     };
 
-    // ProtectedTaskManager::TargetLock gives exclusive write access
-    // to the task's AAT targets. The index is 0-based in XCSoar
-    // (the suggestion uses 1-based).
+    // The suggestion uses 1-based indexing; XCSoar uses 0-based.
     const unsigned tp_index =
       static_cast<unsigned>(suggestion.sector_index);
 
     ProtectedTaskManager::ExclusiveLease lease(task_manager);
-    auto *task = lease->GetOrderedTask();
-    if (task == nullptr)
+    const OrderedTask &task = lease->GetOrderedTask();
+    
+    if (tp_index >= task.TaskSize())
       return false;
 
-    if (tp_index >= task->TaskSize())
+    AATPoint *ap = task.GetAATTaskPoint(tp_index);
+    if (ap == nullptr)
       return false;
 
-    auto &tp = task->GetPoint(tp_index);
-    // Only AAT points have adjustable targets.
-    auto *aat = dynamic_cast<AATPoint *>(&tp);
-    if (aat == nullptr)
-      return false;
-
-    aat->SetTarget(target, true /* override */);
+    // SetTarget with a GeoPoint directly
+    ap->SetTarget(target, true /* override */);
     return true;
   }
 
