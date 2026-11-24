@@ -44,7 +44,7 @@ jobs:
           path: output/UNIX/bin/openglidenav
 
   android:
-    name: Android (ANDROIDFAT)
+    name: Android (ANDROID)
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/xcsoar/xcsoar/xcsoar-build:latest
@@ -55,7 +55,7 @@ jobs:
 
       - name: Build OpenGlide Nav (Android)
         run: |
-          make -j$(nproc) TARGET=ANDROIDFAT USE_CCACHE=y
+          make -j$(nproc) TARGET=ANDROID USE_CCACHE=y
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
